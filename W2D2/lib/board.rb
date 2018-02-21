@@ -1,4 +1,5 @@
 class Board
+  attr_reader :name1, :name2
   attr_accessor :cups
 
   def initialize(name1, name2)
@@ -23,26 +24,26 @@ class Board
   end
 
   def make_move(start_pos, current_player_name)
-    stones = self.cups[start_pos].size
-    self.cups[start_pos] = []
-    ending_pos = (start_pos + stones) % 14
-    self.cups[(start_pos+1)..(ending_pos)].each do |cup|
-      if self.cups.index(cup)%14 == 6
-        cup << :stone if current_player_name == self.name1
-      elsif self.cups.index(cup)%14 == 13
-        cup << :stone if current_player_name == self.name2
+    stones = self.cups[start_pos]
+    cup_idx = start_pos
+    until stones.empty?
+      cup_idx = (cup_idx + 1) % 14
+      if cup_idx == 6
+        self.cups[cup_idx] << stones.pop if current_player_name == self.name1
+      elsif cup_idx == 13
+        self.cups[cup_idx] << stones.pop if current_player_name == self.name2
       else
-        cup << :stone
+        self.cups[cup_idx] << stones.pop
       end
     end
     self.render
-    self.next_turn(ending_pos)
+    self.next_turn(cup_idx)
   end
 
   def next_turn(ending_cup_idx)
-    return :switch if self.cups[ending_cup_idx].size == 1
     return :prompt if ending_cup_idx == 6 || ending_cup_idx == 13
-    return ending_cup_idx if self.cups[ending_cup_idx].empty?
+    return :switch if self.cups[ending_cup_idx].size == 1
+    return ending_cup_idx unless self.cups[ending_cup_idx].empty?
   end
 
   def render
@@ -59,5 +60,10 @@ class Board
   end
 
   def winner
+    name1_count = self.cups[6].size
+    name2_count = self.cups[13].size
+    return :draw if name1_count == name2_count
+    return self.name1 if name1_count > name2_count
+    self.name2 if name1_count < name2_count
   end
 end
